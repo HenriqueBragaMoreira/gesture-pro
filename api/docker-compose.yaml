@@ -1,0 +1,11 @@
+services:
+  postgresql:
+    image: bitnami/postgresql:16
+    environment:
+      POSTGRESQL_USERNAME: docker
+      POSTGRESQL_PASSWORD: docker
+      POSTGRESQL_DATABASE: docker
+    ports:
+      - 5432:5432
+    volumes:
+      - ./database_setup.sql:/docker-entrypoint-initdb.d/database_setup.sql

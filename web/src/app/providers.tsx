@@ -4,18 +4,18 @@ import { QueryClientProvider } from "@/lib/tanstack-query";
 import { ThemeProvider } from "next-themes";
 
 interface ProvidersProps {
-	children: React.ReactNode;
+  children: React.ReactNode;
 }
 
 export function Providers({ children }: ProvidersProps) {
-	return (
-		<ThemeProvider
-			attribute="class"
-			defaultTheme="light"
-			enableSystem={false}
-			disableTransitionOnChange={true}
-		>
-			<QueryClientProvider>{children}</QueryClientProvider>
-		</ThemeProvider>
-	);
+  return (
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="light"
+      enableSystem={false}
+      disableTransitionOnChange={true}
+    >
+      <QueryClientProvider>{children}</QueryClientProvider>
+    </ThemeProvider>
+  );
 }

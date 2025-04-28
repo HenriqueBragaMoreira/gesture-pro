@@ -1,3 +1,4 @@
+import { ThemeProvider } from "@/components/theme-provider";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -33,18 +34,25 @@ export default async function RootLayout({
 	const defaultOpen = cookieStore.get("sidebar_state")?.value === "true";
 
 	return (
-		<html lang="en">
+		<html lang="en" suppressHydrationWarning>
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
 			>
-				<SidebarProvider defaultOpen={defaultOpen}>
-					<AppSidebar />
+				<ThemeProvider
+					attribute="class"
+					defaultTheme="system"
+					enableSystem
+					disableTransitionOnChange
+				>
+					<SidebarProvider defaultOpen={defaultOpen}>
+						<AppSidebar />
 
-					<SidebarInset className="px-10">
-						<Header />
-						{children}
-					</SidebarInset>
-				</SidebarProvider>
+						<SidebarInset className="p-10 pt-2 space-y-7">
+							<Header />
+							{children}
+						</SidebarInset>
+					</SidebarProvider>
+				</ThemeProvider>
 			</body>
 		</html>
 	);

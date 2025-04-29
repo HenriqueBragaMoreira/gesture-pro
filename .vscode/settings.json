@@ -1,0 +1,6 @@
+{
+	"editor.formatOnSave": true,
+	"editor.defaultFormatter": "biomejs.biome",
+	"files.eol": "\n",
+	"typescript.preferences.preferTypeOnlyAutoImports": true
+}

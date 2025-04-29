@@ -1,7 +1,10 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import IntegrityError
 from . import models, schemas
 from decimal import Decimal
+from typing import Optional
+import logging  # Add logging import at the top if not present
+from fastapi import HTTPException, status # Add HTTPException import
 
 # ========= Category CRUD =========
 
@@ -28,33 +31,60 @@ def create_category(db: Session, category: schemas.CategoryCreate):
 # ========= Product CRUD ==========
 
 def get_product(db: Session, product_id: int):
-    return db.query(models.Product).filter(models.Product.id == product_id).first()
+    return db.query(models.Product).options(joinedload(models.Product.category)).filter(models.Product.id == product_id).first()
 
-def get_products(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Product).offset(skip).limit(limit).all()
+def get_products(db: Session, skip: int = 0, limit: int = 100, category_name: Optional[str] = None):
+    query = db.query(models.Product).options(joinedload(models.Product.category))
+    if category_name:
+        query = query.join(models.Category).filter(models.Category.name.ilike(f"%{category_name}%")) # Case-insensitive search
+    return query.offset(skip).limit(limit).all()
 
-def create_product(db: Session, product: schemas.ProductCreate):
+def get_products_count(db: Session, category_name: Optional[str] = None) -> int:
+    """Returns the total number of products in the database, optionally filtered by category name."""
+    query = db.query(models.Product)
+    if category_name:
+        query = query.join(models.Category).filter(models.Category.name.ilike(f"%{category_name}%")) # Case-insensitive search
+    return query.count()
+
+def create_product(db: Session, product: schemas.ProductCreateInternal):
     # Ensure price is converted to Decimal for database storage
-    db_product = models.Product(**product.model_dump())
+    product_data = product.model_dump()
+    # Explicitly remove 'id' if present, although it shouldn't be based on the schema
+    product_data.pop('id', None)
+
+    db_product = models.Product(**product_data)
+
+    # We also need to ensure the price conversion still happens
     if isinstance(db_product.price, float):
-        db_product.price = Decimal(str(db_product.price)) # Convert float to Decimal
+        db_product.price = Decimal(str(db_product.price))
 
     # Optional: Check if category_id exists before trying to insert
     category = get_category(db, product.category_id)
     if not category:
-        return None # Indicate category not found
+        # Return a specific value or raise an exception recognizable by the router
+        # For clarity, let's raise a specific internal exception or return a marker
+        # Returning a specific marker string that the router will check
+        return "CATEGORY_NOT_FOUND"
 
     try:
         db.add(db_product)
         db.commit()
         db.refresh(db_product)
-    except IntegrityError: # Could catch other integrity issues too
+        return db_product # Return the created product on success
+    except IntegrityError as e:
         db.rollback()
-        return None # General failure
-    return db_product
+        # Log the detailed error for debugging
+        logging.error(f"Database integrity error creating product: {e}")
+        # Return a specific error marker or raise an internal exception
+        # Returning a specific marker string
+        return "INTEGRITY_ERROR"
+    except Exception as e: # Catch any other unexpected errors during commit
+        db.rollback()
+        logging.error(f"Unexpected error creating product: {e}")
+        # Return a generic error marker
+        return "UNKNOWN_ERROR"
 
-
-def create_multiple_products(db: Session, products: list[schemas.ProductCreate]):
+def create_multiple_products(db: Session, products: list[schemas.ProductCreateInternal]):
     new_products = []
     errors = []
     for i, product in enumerate(products):
@@ -120,7 +150,4 @@ def create_sale(db: Session, sale: schemas.SaleCreate):
     except IntegrityError: # Could catch other integrity issues
         db.rollback()
         return None
-    return db_sale
-
-
-from sqlalchemy.orm import joinedload # Import for eager loading 
+    return db_sale 

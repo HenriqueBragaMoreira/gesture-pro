@@ -17,21 +17,40 @@ class Category(CategoryBase):
 
 
 # ========= Product Schemas =========
-class ProductBase(BaseModel):
+class ProductBaseApiInput(BaseModel):
+    # Base schema for API input, accepting price as string
+    name: str
+    description: Optional[str] = None
+    price: str
+    brand: Optional[str] = None
+
+class ProductCreateApiInput(ProductBaseApiInput):
+    # Schema for creating a product via API
+    category_id: int
+
+class ProductBaseDb(BaseModel):
+    # Base schema for internal use / DB interaction, using float price
     name: str
     description: Optional[str] = None
     price: float
-    category_id: int
     brand: Optional[str] = None
 
-class ProductCreate(ProductBase):
-    pass
+class ProductCreateInternal(ProductBaseDb):
+    # Schema for passing data to the CRUD layer
+    category_id: int
 
-class Product(ProductBase):
+class Product(ProductBaseDb):
+    # Schema for API output, inheriting float price from ProductBaseDb
     id: int
+    category: Category
 
     class Config:
         from_attributes = True
+
+# Schema for the paginated list response
+class ProductListResponse(BaseModel):
+    products: List[Product]
+    totalProducts: int
 
 
 # ========= Sale Schemas =========

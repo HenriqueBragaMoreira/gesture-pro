@@ -12,7 +12,7 @@ router = APIRouter(
 
 # Removed in-memory storage
 
-@router.post("/", response_model=schemas.Category, status_code=status.HTTP_201_CREATED, summary="Create a new category")
+@router.post("", response_model=schemas.Category, status_code=status.HTTP_201_CREATED, summary="Create a new category")
 def create_category(category: schemas.CategoryCreate, db: Session = Depends(get_db)):
     """
     Creates a new category.
@@ -29,7 +29,7 @@ def create_category(category: schemas.CategoryCreate, db: Session = Depends(get_
          raise HTTPException(status_code=400, detail="Error creating category, possibly duplicate name race condition")
     return created_category
 
-@router.get("/", response_model=List[schemas.Category], summary="List all categories")
+@router.get("", response_model=List[schemas.Category], summary="List all categories")
 def list_categories(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """
     Retrieves a list of all **categories** from the database.

@@ -1,17 +1,16 @@
 import type { Metadata } from "next";
-import { DashboardCards } from "./_components/dashboard-cards";
-import { DashboardCharts } from "./_components/dashboard-charts";
+import { Suspense } from "react";
+import { DashboardContainer } from "./_components/dashboard-container";
+import { DashboardSkeleton } from "./_components/dashboard-skeleton";
 
 export const metadata: Metadata = {
-  title: "Dashboard",
+	title: "Dashboard",
 };
 
 export default function DashboardHome() {
-  return (
-    <div className="flex flex-col gap-6">
-      <DashboardCards />
-
-      <DashboardCharts />
-    </div>
-  );
+	return (
+		<Suspense fallback={<DashboardSkeleton />}>
+			<DashboardContainer />
+		</Suspense>
+	);
 }

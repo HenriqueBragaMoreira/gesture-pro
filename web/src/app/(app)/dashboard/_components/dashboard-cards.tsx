@@ -1,75 +1,71 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { masks } from "@/utils/mask";
 import {
-  AlertTriangle,
-  ArrowUpIcon,
-  Package,
-  ShoppingCart,
+	Package,
+	ShoppingBasket,
+	ShoppingCart,
+	TrendingUp,
 } from "lucide-react";
 
-export function DashboardCards() {
-  return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card className="gap-2">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
-          <ShoppingCart className="size-5 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">$ 757,813.31</div>
-          <div className="flex gap-1 text-xs text-muted-foreground">
-            <span className="flex items-center text-green-500">
-              <ArrowUpIcon className="mr-1 h-4 w-4" />
-              202.1%
-            </span>
-            <span>compared to last month</span>
-          </div>
-        </CardContent>
-      </Card>
+type DashboardCardsProps = {
+	data: {
+		total_sales_value: number;
+		total_items_sold: number;
+		average_sale_value: number;
+		registered_products: number;
+	};
+};
 
-      <Card className="gap-2">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">
-            Registered Products
-          </CardTitle>
-          <Package className="size-5 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">15</div>
-          <p className="text-xs text-muted-foreground">
-            <span className="flex items-center">0 active products (0%)</span>
-          </p>
-        </CardContent>
-      </Card>
+export function DashboardCards({ data }: DashboardCardsProps) {
+	return (
+		<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+			<Card className="gap-2">
+				<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+					<CardTitle className="text-sm font-medium">Total Sales</CardTitle>
+					<ShoppingCart className="size-5 text-teal-300" />
+				</CardHeader>
+				<CardContent>
+					<div className="text-2xl font-bold">
+						{masks.price(data.total_sales_value.toString())}
+					</div>
+				</CardContent>
+			</Card>
 
-      <Card className="gap-2">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Items Sold</CardTitle>
-          <ShoppingCart className="size-5 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">669</div>
-          <p className="text-xs text-muted-foreground">
-            <span className="flex items-center">
-              Average of 44.6 per product
-            </span>
-          </p>
-        </CardContent>
-      </Card>
+			<Card className="gap-2">
+				<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+					<CardTitle className="text-sm font-medium">
+						Registered Products
+					</CardTitle>
+					<Package className="size-5 text-orange-200" />
+				</CardHeader>
+				<CardContent>
+					<div className="text-2xl font-bold">{data.registered_products}</div>
+				</CardContent>
+			</Card>
 
-      <Card className="gap-2">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Low Stock</CardTitle>
-          <AlertTriangle className="size-5 text-amber-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">15</div>
-          <p className="text-xs text-muted-foreground">
-            <span className="flex items-center text-amber-500">
-              100% of products
-            </span>
-          </p>
-        </CardContent>
-      </Card>
-    </div>
-  );
+			<Card className="gap-2">
+				<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+					<CardTitle className="text-sm font-medium">Items Sold</CardTitle>
+					<ShoppingBasket className="size-5 text-blue-500" />
+				</CardHeader>
+				<CardContent>
+					<div className="text-2xl font-bold">{data.total_items_sold}</div>
+				</CardContent>
+			</Card>
+
+			<Card className="gap-2">
+				<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+					<CardTitle className="text-sm font-medium">
+						Average Sale Value
+					</CardTitle>
+					<TrendingUp className="size-5 text-emerald-500" />
+				</CardHeader>
+				<CardContent>
+					<div className="text-2xl font-bold">
+						{masks.price(data.average_sale_value.toFixed(2))}
+					</div>
+				</CardContent>
+			</Card>
+		</div>
+	);
 }

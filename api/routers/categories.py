@@ -53,5 +53,40 @@ def get_category(category_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
     return db_category
 
+@router.patch("/{category_id}", response_model=schemas.Category, summary="Update category name")
+def update_category_name_endpoint(
+    category_id: int,
+    category_data: schemas.CategoryUpdate, # Use the new schema for the request body
+    db: Session = Depends(get_db)
+):
+    """
+    Updates the name of a specific category.
+
+    - **category_id**: The ID of the category to update.
+    - **Request Body**: Requires a JSON body with the new `name`.
+      ```json
+      {
+        "name": "New Category Name"
+      }
+      ```
+
+    Raises:
+    - 404: If the category with the specified ID is not found.
+    - 409: If the new name already exists for another category.
+    - 500: If a database error occurs.
+    """
+    result = crud.update_category_name(db=db, category_id=category_id, category_update=category_data)
+
+    if isinstance(result, str):
+        if result == "NOT_FOUND":
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
+        elif result == "DUPLICATE_NAME":
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Category name already exists")
+        else: # Handles INTEGRITY_ERROR or UNKNOWN_ERROR
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Could not update category")
+
+    # If result is not a string, it's the updated category object
+    return result
+
 # TODO: Implement PUT /categories/{category_id}
 # TODO: Implement DELETE /categories/{category_id} 

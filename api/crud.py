@@ -1,8 +1,9 @@
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func # Import func for SUM and COUNT
 from . import models, schemas
 from decimal import Decimal
-from typing import Optional
+from typing import Optional, List
 import logging  # Add logging import at the top if not present
 from fastapi import HTTPException, status # Add HTTPException import
 
@@ -27,6 +28,33 @@ def create_category(db: Session, category: schemas.CategoryCreate):
         db.rollback()
         return None # Indicate failure due to duplicate name
     return db_category
+
+def update_category_name(db: Session, category_id: int, category_update: schemas.CategoryUpdate) -> models.Category | str:
+    """Updates the name of a specific category."""
+    db_category = get_category(db, category_id)
+    if not db_category:
+        return "NOT_FOUND"
+
+    # Check if the new name already exists for another category
+    existing_category = get_category_by_name(db, category_update.name)
+    if existing_category and existing_category.id != category_id:
+        return "DUPLICATE_NAME"
+
+    # Update the name
+    db_category.name = category_update.name
+
+    try:
+        db.commit()
+        db.refresh(db_category)
+        return db_category
+    except IntegrityError:
+        db.rollback()
+        # This might happen due to unforeseen constraints, although duplicate check should cover most.
+        return "INTEGRITY_ERROR"
+    except Exception as e:
+        db.rollback()
+        logging.error(f"Unexpected error updating category {category_id}: {e}")
+        return "UNKNOWN_ERROR"
 
 # ========= Product CRUD ==========
 
@@ -124,9 +152,15 @@ def get_sale(db: Session, sale_id: int):
     # Consider joining product for efficiency if needed immediately
     return db.query(models.Sale).filter(models.Sale.id == sale_id).first()
 
-def get_sales(db: Session, skip: int = 0, limit: int = 100):
+def get_sales(db: Session, skip: int = 0, limit: int = 100, category_id: Optional[int] = None):
     # Using eager loading to fetch related product data in the same query
-    return db.query(models.Sale).options(joinedload(models.Sale.product)).offset(skip).limit(limit).all()
+    query = db.query(models.Sale).options(joinedload(models.Sale.product).joinedload(models.Product.category))
+
+    # Add filtering by category_id if provided
+    if category_id is not None:
+        query = query.join(models.Product).filter(models.Product.category_id == category_id)
+
+    return query.offset(skip).limit(limit).all()
 
 def create_sale(db: Session, sale: schemas.SaleCreate):
     # Fetch the product to get the price
@@ -150,4 +184,37 @@ def create_sale(db: Session, sale: schemas.SaleCreate):
     except IntegrityError: # Could catch other integrity issues
         db.rollback()
         return None
-    return db_sale 
+    return db_sale
+
+# ========= Dashboard CRUD ==========
+
+def get_dashboard_summary(db: Session, category_id: Optional[int] = None):
+    """Calculates summary statistics for the dashboard, optionally filtered by category_id."""
+    # --- Product Count ---
+    product_query = db.query(func.count(models.Product.id))
+    if category_id is not None:
+        product_query = product_query.filter(models.Product.category_id == category_id)
+    total_products = product_query.scalar()
+
+    # --- Sales Sums (Join with Product for filtering) ---
+    sales_base_query = db.query(models.Sale).join(models.Product)
+    if category_id is not None:
+        sales_base_query = sales_base_query.filter(models.Product.category_id == category_id)
+
+    # Use the filtered query to calculate sums and average
+    total_sales_value = sales_base_query.with_entities(func.coalesce(func.sum(models.Sale.total_price), 0.0)).scalar()
+    total_items_sold = sales_base_query.with_entities(func.coalesce(func.sum(models.Sale.quantity), 0)).scalar()
+    average_sale_value = sales_base_query.with_entities(func.coalesce(func.avg(models.Sale.total_price), 0.0)).scalar()
+
+    return {
+        "registered_products": total_products or 0,
+        "total_sales_value": float(total_sales_value), # Cast Decimal result to float
+        "total_items_sold": total_items_sold,
+        "average_sale_value": float(average_sale_value) # Cast Decimal result to float
+    }
+
+def get_all_sales_with_details(db: Session) -> List[models.Sale]:
+    """Fetches all sales with related product and category information eagerly loaded."""
+    return db.query(models.Sale).options(
+        joinedload(models.Sale.product).joinedload(models.Product.category)
+    ).order_by(models.Sale.id).all() 

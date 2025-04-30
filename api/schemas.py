@@ -15,6 +15,9 @@ class Category(CategoryBase):
     class Config:
         from_attributes = True # Changed from orm_mode = True in Pydantic v2
 
+class CategoryUpdate(BaseModel):
+    name: str
+
 
 # ========= Product Schemas =========
 class ProductBaseApiInput(BaseModel):
@@ -71,5 +74,26 @@ class Sale(SaleBase):
 
 # ========= Combined Schema for Listing Sales with Product Info and Profit =========
 class SaleWithProductInfo(Sale):
-    product: Product 
-    # Note: Profit calculation logic needs adjustment as purchase_price/sale_price removed 
+    product: Product
+    # Note: Profit calculation logic needs adjustment as purchase_price/sale_price removed
+
+# ========= Schema for Monthly Aggregated Sales =========
+class MonthlySalesSummary(BaseModel):
+    month: str  # Ex: "Jan", "Feb"
+    monthly_total_sales_value: float
+    monthly_total_items_sold: int
+    sales_details: List[SaleWithProductInfo] # Detailed sales for this month
+
+    class Config:
+        from_attributes = True
+
+# ========= Dashboard Schema =========
+class DashboardSummary(BaseModel):
+    registered_products: int
+    total_sales_value: Optional[float] = 0.0 # Overall total
+    total_items_sold: Optional[int] = 0    # Overall total
+    average_sale_value: Optional[float] = 0.0 # Overall average
+    sales_by_month: List[MonthlySalesSummary] # Changed from sales_with_info to sales_by_month
+
+    class Config:
+        from_attributes = True # For potential future use with ORM objects 

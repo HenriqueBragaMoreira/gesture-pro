@@ -16,19 +16,20 @@ router = APIRouter(
 # Removed in-memory storage
 
 @router.get("", response_model=schemas.ProductListResponse, summary="List all products")
-def list_products(skip: int = 0, limit: int = 100, category: Optional[str] = None, db: Session = Depends(get_db)):
+def list_products(skip: int = 0, limit: int = 100, category: Optional[str] = None, name: Optional[str] = None, db: Session = Depends(get_db)):
     """
     Retrieves a list of all **products** from the database with pagination support and total count.
 
     Supports pagination with `skip` and `limit` query parameters.
     Optionally filters by `category` name (case-insensitive).
+    Optionally filters by product `name` (case-insensitive).
 
     Returns:
         - `products`: A list of product objects.
-        - `totalProducts`: The total number of products available (respecting the filter).
+        - `totalProducts`: The total number of products available (respecting the filters).
     """
-    products = crud.get_products(db, skip=skip, limit=limit, category_name=category)
-    total_products = crud.get_products_count(db, category_name=category)
+    products = crud.get_products(db, skip=skip, limit=limit, category_name=category, name=name)
+    total_products = crud.get_products_count(db, category_name=category, name=name)
     return {"products": products, "totalProducts": total_products}
 
 @router.post("", response_model=schemas.Product, status_code=status.HTTP_201_CREATED, summary="Create a new product")

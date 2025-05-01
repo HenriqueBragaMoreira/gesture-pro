@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, status, Depends
-from typing import List
+from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from .. import crud, models, schemas # Use relative imports
@@ -30,13 +30,14 @@ def create_category(category: schemas.CategoryCreate, db: Session = Depends(get_
     return created_category
 
 @router.get("", response_model=List[schemas.Category], summary="List all categories")
-def list_categories(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def list_categories(skip: int = 0, limit: int = 100, name: Optional[str] = None, db: Session = Depends(get_db)):
     """
     Retrieves a list of all **categories** from the database.
 
     Supports pagination with `skip` and `limit` query parameters.
+    Optionally filters by `name` (case-insensitive).
     """
-    categories = crud.get_categories(db, skip=skip, limit=limit)
+    categories = crud.get_categories(db, skip=skip, limit=limit, name=name)
     return categories
 
 @router.get("/{category_id}", response_model=schemas.Category, summary="Get a specific category by ID")

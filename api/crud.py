@@ -13,10 +13,15 @@ def get_category(db: Session, category_id: int):
     return db.query(models.Category).filter(models.Category.id == category_id).first()
 
 def get_category_by_name(db: Session, name: str):
-    return db.query(models.Category).filter(models.Category.name == name).first()
+    """Retrieves a category by name (case-insensitive)."""
+    return db.query(models.Category).filter(func.lower(models.Category.name) == func.lower(name)).first()
 
-def get_categories(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Category).offset(skip).limit(limit).all()
+def get_categories(db: Session, skip: int = 0, limit: int = 100, name: Optional[str] = None):
+    query = db.query(models.Category)
+    if name:
+        # Apply case-insensitive filtering for category name
+        query = query.filter(models.Category.name.ilike(f"%{name}%"))
+    return query.offset(skip).limit(limit).all()
 
 def create_category(db: Session, category: schemas.CategoryCreate):
     db_category = models.Category(name=category.name)
@@ -61,17 +66,23 @@ def update_category_name(db: Session, category_id: int, category_update: schemas
 def get_product(db: Session, product_id: int):
     return db.query(models.Product).options(joinedload(models.Product.category)).filter(models.Product.id == product_id).first()
 
-def get_products(db: Session, skip: int = 0, limit: int = 100, category_name: Optional[str] = None):
+def get_products(db: Session, skip: int = 0, limit: int = 100, category_name: Optional[str] = None, name: Optional[str] = None):
     query = db.query(models.Product).options(joinedload(models.Product.category))
     if category_name:
-        query = query.join(models.Category).filter(models.Category.name.ilike(f"%{category_name}%")) # Case-insensitive search
+        query = query.join(models.Category).filter(models.Category.name.ilike(f"%{category_name}%")) # Case-insensitive search by category name
+    if name:
+        # Apply case-insensitive filtering for product name
+        query = query.filter(models.Product.name.ilike(f"%{name}%"))
     return query.offset(skip).limit(limit).all()
 
-def get_products_count(db: Session, category_name: Optional[str] = None) -> int:
-    """Returns the total number of products in the database, optionally filtered by category name."""
+def get_products_count(db: Session, category_name: Optional[str] = None, name: Optional[str] = None) -> int:
+    """Returns the total number of products in the database, optionally filtered by category name and product name."""
     query = db.query(models.Product)
     if category_name:
-        query = query.join(models.Category).filter(models.Category.name.ilike(f"%{category_name}%")) # Case-insensitive search
+        query = query.join(models.Category).filter(models.Category.name.ilike(f"%{category_name}%")) # Case-insensitive search by category name
+    if name:
+        # Apply case-insensitive filtering for product name
+        query = query.filter(models.Product.name.ilike(f"%{name}%"))
     return query.count()
 
 def create_product(db: Session, product: schemas.ProductCreateInternal):

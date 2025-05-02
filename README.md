@@ -72,11 +72,17 @@ a.  **Navegar para o diretório Web:**
 
     cd web
 
-b.  **Instalar Dependências Node.js:**
+b.  **Criar Arquivo `.env.local`:**
+    O frontend precisa saber a URL base da API. Crie um arquivo chamado `.env.local` dentro do diretório `web/` com o seguinte conteúdo:
+
+    # web/.env
+    NEXT_PUBLIC_BASE_URL="http://localhost:8000/"
+
+c.  **Instalar Dependências Node.js:**
 
     pnpm install
 
-c.  **Rodar o Frontend:**
+d.  **Rodar o Frontend:**
 ```bash
 pnpm dev
 

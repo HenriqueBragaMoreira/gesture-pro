@@ -8,34 +8,36 @@ import { useCallback } from "react";
 import { CategoryDialog } from "./category-dialog";
 
 type ToolbarProps = {
-  setName: React.Dispatch<React.SetStateAction<string>>;
+	name: string;
+	setName: React.Dispatch<React.SetStateAction<string>>;
 };
 
-export function Toolbar({ setName }: ToolbarProps) {
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
-  const debouncedSetName = useCallback(
-    debounce((value: unknown) => {
-      if (typeof value === "string") {
-        setName(value);
-      }
-    }, 500),
-    [setName]
-  );
+export function Toolbar({ name, setName }: ToolbarProps) {
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+	const debouncedSetName = useCallback(
+		debounce((value: unknown) => {
+			if (typeof value === "string") {
+				setName(value);
+			}
+		}, 500),
+		[setName],
+	);
 
-  return (
-    <div className="flex justify-between items-center">
-      <Input
-        placeholder="Search categories"
-        onChange={(e) => debouncedSetName(e.target.value)}
-        className="h-9 max-w-60"
-      />
+	return (
+		<div className="flex justify-between items-center">
+			<Input
+				placeholder="Search categories"
+				defaultValue={name}
+				onChange={(e) => debouncedSetName(e.target.value)}
+				className="h-9 max-w-60"
+			/>
 
-      <CategoryDialog>
-        <Button>
-          <PlusCircle />
-          Add Category
-        </Button>
-      </CategoryDialog>
-    </div>
-  );
+			<CategoryDialog>
+				<Button>
+					<PlusCircle />
+					Add Category
+				</Button>
+			</CategoryDialog>
+		</div>
+	);
 }

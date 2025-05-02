@@ -1,5 +1,5 @@
 fastapi[standard]
 python-multipart
 psycopg2-binary
-SQLAlchemy>=1.4,<2.0 # ORM
-python-dotenv>=0.19 # Para carregar .env 
+SQLAlchemy>=1.4,<2.0
+python-dotenv>=0.19

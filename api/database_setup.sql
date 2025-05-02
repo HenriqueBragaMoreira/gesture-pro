@@ -32,4 +32,18 @@ CREATE TABLE sales (
 -- Optional: Add indexes for frequently queried columns, especially foreign keys
 CREATE INDEX idx_products_category_id ON products (category_id);
 CREATE INDEX idx_sales_product_id ON sales (product_id);
-CREATE INDEX idx_sales_date ON sales (date); 
+CREATE INDEX idx_sales_date ON sales (date);
+
+-- Insert initial categories
+INSERT INTO categories (name) VALUES
+('Eletrônicos'),
+('Roupas'),
+('Alimentos'),
+('Livros')
+ON CONFLICT (name) DO NOTHING; -- Avoid error if category already exists
+
+-- Reset sequences to the correct value after initial data insertion
+-- This prevents duplicate primary key errors if the sequence gets out of sync
+SELECT setval(pg_get_serial_sequence('categories', 'id'), COALESCE(max(id), 1), max(id) IS NOT null) FROM categories;
+SELECT setval(pg_get_serial_sequence('products', 'id'), COALESCE(max(id), 1), max(id) IS NOT null) FROM products;
+-- Note: No initial sales data, so no need to reset sales sequence unless manually inserted data exists. 

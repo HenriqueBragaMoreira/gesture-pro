@@ -19,7 +19,8 @@
   "javascript": {
     "formatter": {
       "trailingCommas": "es5",
-      "lineEnding": "lf"
+      "lineEnding": "lf",
+      "indentStyle": "space"
     },
     "globals": ["React"]
   },

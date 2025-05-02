@@ -1,7 +1,9 @@
 -- Table: categories
 CREATE TABLE categories (
     id SERIAL PRIMARY KEY,  -- Auto-incrementing integer primary key
-    name VARCHAR(255) UNIQUE NOT NULL -- Category name, must be unique and cannot be empty
+    name VARCHAR(255) UNIQUE NOT NULL, -- Category name, must be unique and cannot be empty
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP, -- Add created_at
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP -- Add updated_at
 );
 
 -- Table: products
@@ -12,6 +14,8 @@ CREATE TABLE products (
     price DECIMAL(10, 2) NOT NULL CHECK (price >= 0), -- Product price, must be non-negative
     category_id INT NOT NULL, -- Foreign key linking to the categories table
     brand VARCHAR(100), -- Product brand, can be empty
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP, -- Add created_at
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP, -- Add updated_at
     FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE RESTRICT -- Ensure category exists, prevent deleting categories with products
 );
 

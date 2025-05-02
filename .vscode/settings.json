@@ -2,5 +2,8 @@
 	"editor.formatOnSave": true,
 	"editor.defaultFormatter": "biomejs.biome",
 	"files.eol": "\n",
-	"typescript.preferences.preferTypeOnlyAutoImports": true
+	"typescript.preferences.preferTypeOnlyAutoImports": true,
+	"[typescriptreact]": {
+		"editor.defaultFormatter": "biomejs.biome"
+	}
 }

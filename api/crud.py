@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import func # Import func for SUM and COUNT
+from sqlalchemy import func, select # Import func for SUM and COUNT and select for count query
 from . import models, schemas
 from decimal import Decimal
-from typing import Optional, List
+from typing import Optional, List, Tuple
 import logging  # Add logging import at the top if not present
 from fastapi import HTTPException, status # Add HTTPException import
 
@@ -16,12 +16,37 @@ def get_category_by_name(db: Session, name: str):
     """Retrieves a category by name (case-insensitive)."""
     return db.query(models.Category).filter(func.lower(models.Category.name) == func.lower(name)).first()
 
-def get_categories(db: Session, skip: int = 0, limit: int = 100, name: Optional[str] = None):
-    query = db.query(models.Category)
+def get_category_by_exact_name(db: Session, name: str):
+    """Retrieves a category by exact name (case-sensitive)."""
+    # Direct string comparison is case-sensitive by default in most SQL contexts
+    return db.query(models.Category).filter(models.Category.name == name).first()
+
+def get_categories(db: Session, skip: int = 0, limit: int = 10, name: Optional[str] = None) -> Tuple[List[models.Category], int]:
+    """
+    Retrieves a list of categories with pagination and optional name filtering,
+    along with the total count of matching categories. ORDERED BY ID ASC.
+    """
+    # Base query for selecting categories
+    query = select(models.Category)
+    # Base query for counting total matching categories
+    count_query = select(func.count()).select_from(models.Category)
+
+    # Apply name filter if provided (case-insensitive)
     if name:
-        # Apply case-insensitive filtering for category name
-        query = query.filter(models.Category.name.ilike(f"%{name}%"))
-    return query.offset(skip).limit(limit).all()
+        search = f"%{name}%"
+        query = query.filter(models.Category.name.ilike(search))
+        count_query = count_query.filter(models.Category.name.ilike(search))
+
+    # Get the total count *before* applying pagination or ordering on the main query
+    total_count = db.execute(count_query).scalar_one_or_none() or 0
+
+    # Apply ordering by ID and then pagination to the main query
+    query = query.order_by(models.Category.id).offset(skip).limit(limit)
+
+    # Execute the main query to get the paginated and ordered categories
+    categories = db.execute(query).scalars().all()
+
+    return categories, total_count
 
 def create_category(db: Session, category: schemas.CategoryCreate):
     db_category = models.Category(name=category.name)

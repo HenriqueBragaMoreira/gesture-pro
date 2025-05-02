@@ -9,14 +9,30 @@ class CategoryBase(BaseModel):
 class CategoryCreate(CategoryBase):
     pass
 
+# Schema for full category details (used in GET /categories)
 class Category(CategoryBase):
     id: int
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
-        from_attributes = True # Changed from orm_mode = True in Pydantic v2
+        from_attributes = True
+
+# NEW: Schema for nested category representation (ID and Name only)
+class CategoryNested(BaseModel):
+    id: int
+    name: str
+
+    class Config:
+        from_attributes = True
 
 class CategoryUpdate(BaseModel):
     name: str
+
+# Schema for the paginated list response for categories
+class CategoriesListResponse(BaseModel):
+    categories: List[Category] # Uses the full Category schema
+    total: int
 
 
 # ========= Product Schemas =========
@@ -43,16 +59,15 @@ class ProductCreateInternal(ProductBaseDb):
     category_id: int
 
 class Product(ProductBaseDb):
-    # Schema for API output, inheriting float price from ProductBaseDb
     id: int
-    category: Category
+    category: CategoryNested # CHANGED: Use CategoryNested here
 
     class Config:
         from_attributes = True
 
 # Schema for the paginated list response
 class ProductListResponse(BaseModel):
-    products: List[Product]
+    products: List[Product] # Will now use Product schema with CategoryNested
     totalProducts: int
 
 

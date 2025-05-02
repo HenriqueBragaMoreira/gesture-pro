@@ -19,26 +19,42 @@ def create_category(category: schemas.CategoryCreate, db: Session = Depends(get_
 
     - **name**: The name for the new category.
 
-    Raises 400 if category name already exists.
+    Raises 409 if a category with the exact same name (case-sensitive) already exists.
+    Raises 500 if the database constraint (potentially case-insensitive) prevents creation.
     """
-    db_category = crud.get_category_by_name(db, name=category.name)
-    if db_category:
-        raise HTTPException(status_code=400, detail="Category name already registered")
+    # Perform an explicit CASE-SENSITIVE check first.
+    exact_match = crud.get_category_by_exact_name(db, name=category.name)
+    if exact_match:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Category name '{category.name}' already exists (case-sensitive match)."
+        )
+
+    # If no exact match, attempt to create the category.
     created_category = crud.create_category(db=db, category=category)
-    if created_category is None: # Should not happen if check above passes, but good practice
-         raise HTTPException(status_code=400, detail="Error creating category, possibly duplicate name race condition")
+
+    # If creation fails (returns None), it's likely the DB's constraint (could be case-insensitive)
+    # or another integrity error.
+    if created_category is None:
+         raise HTTPException(
+             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+             detail="Failed to create category. A category with a similar name (case-insensitive) might exist, or another database error occurred."
+         )
+
     return created_category
 
-@router.get("", response_model=List[schemas.Category], summary="List all categories")
-def list_categories(skip: int = 0, limit: int = 100, name: Optional[str] = None, db: Session = Depends(get_db)):
+@router.get("", response_model=schemas.CategoriesListResponse, summary="List categories with pagination")
+def list_categories(skip: int = 0, limit: int = 10, name: Optional[str] = None, db: Session = Depends(get_db)):
     """
-    Retrieves a list of all **categories** from the database.
+    Retrieves a list of **categories** from the database with pagination support.
+
+    Includes the total count of categories matching the filter (if any).
 
     Supports pagination with `skip` and `limit` query parameters.
     Optionally filters by `name` (case-insensitive).
     """
-    categories = crud.get_categories(db, skip=skip, limit=limit, name=name)
-    return categories
+    categories, total_count = crud.get_categories(db, skip=skip, limit=limit, name=name)
+    return schemas.CategoriesListResponse(categories=categories, total=total_count)
 
 @router.get("/{category_id}", response_model=schemas.Category, summary="Get a specific category by ID")
 def get_category(category_id: int, db: Session = Depends(get_db)):

@@ -3,6 +3,7 @@ export type GetProductsProps = {
   limit: number;
   signal?: AbortSignal;
   category?: string;
+  name?: string;
 };
 
 export type GetProductsResponse = {
@@ -21,15 +22,6 @@ export type Products = {
   brand: string;
   id: number;
 };
-
-export type GetCategoriesProps = {
-  signal?: AbortSignal;
-};
-
-export type GetCategoriesResponse = {
-  name: string;
-  id: number;
-}[];
 
 export type ImportProductsResponse = {
   message: string;

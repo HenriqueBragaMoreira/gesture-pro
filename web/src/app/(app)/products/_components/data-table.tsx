@@ -39,6 +39,7 @@ import { Toolbar } from "./toolbar";
 
 export function DataTable() {
   const [category, setCategory] = useState<string>("");
+  const [name, setName] = useState<string>("");
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
   const pagination = usePagination();
@@ -51,6 +52,7 @@ export function DataTable() {
           pagination.firstItem,
           pagination.rowsPerPage,
           category,
+          name,
         ],
         queryFn: async ({ signal }) => {
           return await productsService.getProducts({
@@ -58,6 +60,7 @@ export function DataTable() {
             limit: pagination.rowsPerPage,
             signal,
             category,
+            name,
           });
         },
       },
@@ -99,10 +102,10 @@ export function DataTable() {
   return (
     <div className="flex flex-col gap-6">
       <Toolbar
-        table={table}
-        categories={categories?.data}
+        categories={categories?.data.categories}
         category={category}
         setCategory={setCategory}
+        setName={setName}
       />
 
       <div className="*:data-[slot=table-container]:max-h-[calc(100vh-20rem)] *:data-[slot=table-container]:rounded-md *:data-[slot=table-container]:border">
@@ -157,7 +160,9 @@ export function DataTable() {
 
         <div className="my-4 flex flex-wrap items-center justify-between px-1">
           <div className="flex items-center gap-4">
-            <span className="font-medium">Show results:</span>
+            <span className="font-medium text-sm text-muted-foreground">
+              Show results:
+            </span>
 
             <Select
               value={pagination.rowsPerPage.toString()}
@@ -178,7 +183,7 @@ export function DataTable() {
             </Select>
           </div>
           <div className="flex items-center gap-8">
-            <span className="font-medium">
+            <span className="font-medium text-sm text-muted-foreground">
               {pagination.firstItem + 1}–
               {lastItem > (products?.data?.totalProducts ?? 0)
                 ? products?.data?.totalProducts
@@ -186,10 +191,11 @@ export function DataTable() {
               de {products?.data?.totalProducts}
             </span>
 
-            <div className="flex items-center">
+            <div className="flex gap-1 items-center">
               <Button
                 size="icon"
-                variant="ghost"
+                variant="outline"
+                className="size-8"
                 disabled={pagination.page === 0}
                 onClick={() => pagination.resetPage()}
               >
@@ -198,7 +204,8 @@ export function DataTable() {
 
               <Button
                 size="icon"
-                variant="ghost"
+                variant="outline"
+                className="size-8"
                 disabled={pagination.page === 0}
                 onClick={() =>
                   pagination.handleChangePage(null, pagination.page - 1)
@@ -209,7 +216,8 @@ export function DataTable() {
 
               <Button
                 size="icon"
-                variant="ghost"
+                variant="outline"
+                className="size-8"
                 disabled={pagination.page + 1 === pageCount}
                 onClick={() =>
                   pagination.handleChangePage(null, pagination.page + 1)
@@ -220,7 +228,8 @@ export function DataTable() {
 
               <Button
                 size="icon"
-                variant="ghost"
+                variant="outline"
+                className="size-8"
                 disabled={pagination.page + 1 === pageCount}
                 onClick={() => pagination.handleChangePage(null, pageCount - 1)}
               >

@@ -2,9 +2,11 @@ import { api } from "@/lib/ky";
 import { masks } from "@/utils/mask";
 import { queryParamsBuilder } from "@/utils/query-params-builder";
 import type {
-  CreateProductProps,
   GetCategoriesProps,
   GetCategoriesResponse,
+} from "../categories/types";
+import type {
+  CreateProductProps,
   GetProductsProps,
   GetProductsResponse,
   ImportProductsResponse,
@@ -12,11 +14,18 @@ import type {
 } from "./types";
 
 export const productsService = {
-  getProducts: async ({ skip, limit, signal, category }: GetProductsProps) => {
+  getProducts: async ({
+    skip,
+    limit,
+    signal,
+    category,
+    name,
+  }: GetProductsProps) => {
     const { params } = queryParamsBuilder([
       { param: "skip", value: skip.toString() },
       { param: "limit", value: limit.toString() },
       { param: "category", value: category },
+      { param: "name", value: name },
     ]);
 
     const response = await api.get(`products?${params}`, {

@@ -36,7 +36,6 @@ export function ImportCsvDialog() {
     },
 
     onSuccess(data) {
-      console.log(data);
       toast.success("Products imported successfully!");
       if (data.db_errors.length > 0) {
         toast.warning(

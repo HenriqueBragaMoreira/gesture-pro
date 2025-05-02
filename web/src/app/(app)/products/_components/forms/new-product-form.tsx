@@ -21,11 +21,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import type { GetCategoriesResponse } from "@/services/categories/types";
 import { productsService } from "@/services/products";
-import type {
-  GetCategoriesResponse,
-  Products,
-} from "@/services/products/types";
+import type { Products } from "@/services/products/types";
 import { masks } from "@/utils/mask";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -117,7 +115,7 @@ export function NewProductForm({ product }: NewProductFormProps) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {categories?.map((item) => (
+                    {categories?.categories?.map((item) => (
                       <SelectItem key={item.id} value={item.id.toString()}>
                         {item.name}
                       </SelectItem>
